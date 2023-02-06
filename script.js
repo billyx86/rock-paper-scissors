@@ -19,9 +19,9 @@ function getComputerChoice() {
 
 function resultOut(win, playerSelection, computerSelection) {
     if(win == true) {
-        console.log("You win! " + playerSelection + " beats " + computerSelection);
+        console.log("You win!", playerSelection, "beats", computerSelection);
     } else {
-        console.log("You lost! " + computerSelection + " beats " + playerSelection);
+        console.log("You lost!", computerSelection, "beats", playerSelection);
     }
 }
 
@@ -30,7 +30,7 @@ function playRound(playerSelection, computerSelection) {
     if(playerSelection === computerSelection) {
         playerScore++;
         computerScore++;
-        console.log("You tied! You both had ", playerSelection);
+        console.log("You tied! You both had", playerSelection);
     } else if((playerSelection == "rock" && computerSelection == "scissors") || (playerSelection == "scissors" && computerSelection == "rock")) {
         playerSelection == "rock" ? (playerScore++, resultOut(1, playerSelection, computerSelection)) : (computerScore++, resultOut(0, playerSelection, computerSelection));
     } else if((playerSelection == "scissors" && computerSelection == "paper") || (playerSelection == "paper" && computerSelection == "scissors")) {
@@ -39,3 +39,20 @@ function playRound(playerSelection, computerSelection) {
         playerSelection == "paper" ? (playerScore++, resultOut(1, playerSelection, computerSelection)): (computerScore++, resultOut(0, playerSelection, computerSelection));
     }
 }
+
+function game() {
+    for(let i = 0; i < 5; i++) {
+        let playerSelection = prompt("Choose rock, paper, or scissors: ");
+        playRound(playerSelection, getComputerChoice());
+    }
+
+    if(playerScore > computerScore) {
+        console.log("You win with a score of", playerScore);
+    } else if(playerScore == computerScore) {
+        console.log("You tied with a score of", playerScore);
+    } else {
+        console.log("You lost with a score of", playerScore);
+    }
+}
+
+game();
