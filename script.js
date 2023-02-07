@@ -55,4 +55,9 @@ function playRound(playerSelection, computerSelection) {
 function game(playerSelection) {
     playRound(playerSelection, getComputerChoice());
     scoreDiv.textContent = `You: ${playerScore}, Computer: ${computerScore}`;
+    if(playerScore == 5)  {
+        resultOut.textContent = "You win! Congratulations."
+    } else if(computerScore == 5) {
+        resultOut.textContent = "The computer wins!"
+    }
 }
