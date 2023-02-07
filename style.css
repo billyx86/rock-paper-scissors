@@ -1,0 +1,17 @@
+@font-face {
+    font-family: "VT323-Regular";
+    src: url(VT323-Regular.ttf)
+}
+
+body {
+    background-color: black;
+    color: lime;
+    font-family:"VT323-Regular";
+    font-size: 32px;
+}
+
+a {
+    text-decoration: underline;
+    color: limegreen;
+    font-weight: bold;
+}
