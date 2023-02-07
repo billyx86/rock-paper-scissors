@@ -1,20 +1,27 @@
 let playerScore = 0;
 let computerScore = 0;
 
-function getRandomInt(max) {
-    return Math.floor(Math.random() * max);
-}
+// DOM
+
+const playerRock = document.getElementById("rock");
+const playerPaper = document.getElementById("paper");
+const playerScissors = document.getElementById("scissors");
+
+playerRock.addEventListener('click', function () {
+    game("rock");
+});
+playerPaper.addEventListener('click', function () {
+    game("paper");
+});
+playerScissors.addEventListener('click', function () {
+    game("scissors");
+});
+
+// main code
 
 function getComputerChoice() {
-    let random = getRandomInt(3);
-    
-    if(random === 0) {
-        return("rock");
-    } else if(random === 1) {
-        return("paper");
-    } else if(random === 2) {
-        return("scissors");
-    }
+    var choices = ["rock", "paper", "scissors"]
+    return(choices[Math.floor(Math.random()*choices.length)]);
 }
 
 function resultOut(win, playerSelection, computerSelection) {
@@ -28,8 +35,6 @@ function resultOut(win, playerSelection, computerSelection) {
 function playRound(playerSelection, computerSelection) {
     playerSelection = playerSelection.toLowerCase();
     if(playerSelection === computerSelection) {
-        playerScore++;
-        computerScore++;
         console.log("You tied! You both had", playerSelection);
     } else if((playerSelection == "rock" && computerSelection == "scissors") || (playerSelection == "scissors" && computerSelection == "rock")) {
         playerSelection == "rock" ? (playerScore++, resultOut(1, playerSelection, computerSelection)) : (computerScore++, resultOut(0, playerSelection, computerSelection));
@@ -40,19 +45,14 @@ function playRound(playerSelection, computerSelection) {
     }
 }
 
-function game() {
-    for(let i = 0; i < 5; i++) {
-        let playerSelection = prompt("Choose rock, paper, or scissors: ");
-        playRound(playerSelection, getComputerChoice());
-    }
+function game(playerSelection) {
+    playRound(playerSelection, getComputerChoice());
 
-    if(playerScore > computerScore) {
+    /*if(playerScore > computerScore) {
         console.log("You win with a score of", playerScore);
     } else if(playerScore == computerScore) {
         console.log("You tied with a score of", playerScore);
     } else {
         console.log("You lost with a score of", playerScore);
-    }
+    }*/
 }
-
-game();
