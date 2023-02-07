@@ -11,13 +11,13 @@ const scoreDiv = document.getElementById("score");
 const resultOut = document.getElementById("result-out")
 
 playerRock.addEventListener('click', function () {
-    game("rock");
+    if (!(playerScore == 5 || computerScore == 5)) game("rock");
 });
 playerPaper.addEventListener('click', function () {
-    game("paper");
+    if (!(playerScore == 5 || computerScore == 5)) game("paper");
 });
 playerScissors.addEventListener('click', function () {
-    game("scissors");
+    if (!(playerScore == 5 || computerScore == 5)) game("scissors");
 });
 
 // main code
@@ -55,12 +55,4 @@ function playRound(playerSelection, computerSelection) {
 function game(playerSelection) {
     playRound(playerSelection, getComputerChoice());
     scoreDiv.textContent = `You: ${playerScore}, Computer: ${computerScore}`;
-
-    /*if(playerScore > computerScore) {
-        console.log("You win with a score of", playerScore);
-    } else if(playerScore == computerScore) {
-        console.log("You tied with a score of", playerScore);
-    } else {
-        console.log("You lost with a score of", playerScore);
-    }*/
 }
