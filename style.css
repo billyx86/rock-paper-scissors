@@ -14,12 +14,13 @@
     flex: 0 0 auto;
     max-width: 9rem;
     height: 2.5rem;
-    background-color: lime;
-    color: black;
+    background-color: black;
+    color: lime;
     font-family: "VT323-Regular";
     font-size: 30px;
     border: none;
     text-align: left;
+    display: inline-block;
 }
 
 body {
