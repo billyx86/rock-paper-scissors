@@ -6,6 +6,7 @@ let computerScore = 0;
 const playerRock = document.getElementById("rock");
 const playerPaper = document.getElementById("paper");
 const playerScissors = document.getElementById("scissors");
+const resetButton = document.getElementById("reset");
 
 const scoreDiv = document.getElementById("score");
 const resultOut = document.getElementById("result-out")
@@ -13,11 +14,20 @@ const resultOut = document.getElementById("result-out")
 playerRock.addEventListener('click', function () {
     if (!(playerScore == 5 || computerScore == 5)) game("rock");
 });
+
 playerPaper.addEventListener('click', function () {
     if (!(playerScore == 5 || computerScore == 5)) game("paper");
 });
+
 playerScissors.addEventListener('click', function () {
     if (!(playerScore == 5 || computerScore == 5)) game("scissors");
+});
+
+resetButton.addEventListener('click', function () {
+    resultOut.textContent = "";
+    scoreDiv.textContent = "";
+    playerScore = 0;
+    computerScore = 0;
 });
 
 // main code
