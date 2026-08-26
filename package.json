@@ -1,0 +1,10 @@
+{
+  "name": "rock-paper-scissors",
+  "version": "1.0.0",
+  "description": "A terminal-styled Rock Paper Scissors game against the computer (first to 5 wins).",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
