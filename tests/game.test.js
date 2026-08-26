@@ -60,6 +60,14 @@ function loadGame(random = 0) {
     };
 }
 
+test("page content is wrapped in a <main> landmark (a11y)", () => {
+    const m = html.match(/<main\b[^>]*>[\s\S]*?<\/main>/i);
+    assert.ok(m, "no <main> landmark — screen readers have no 'main content' region to jump to");
+    // the game controls must live inside it
+    assert.match(m[0], /id=["']rock["']/i, "the Rock button should be inside <main>");
+    assert.match(m[0], /id=["']result-out["']/i, "the live result region should be inside <main>");
+});
+
 test("rock beats scissors: player scores", () => {
     const g = loadGame(0.99); // computer: scissors
     g.click("rock");
