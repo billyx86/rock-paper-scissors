@@ -11,8 +11,16 @@ const html = readFileSync(path.join(here, "..", "index.html"), "utf8");
 class FakeElement {
     constructor(id) {
         this.id = id;
-        this.textContent = "";
+        this._textContent = "";
+        this._textWrites = 0;
         this._listeners = {};
+    }
+    get textContent() {
+        return this._textContent;
+    }
+    set textContent(value) {
+        this._textContent = String(value);
+        this._textWrites++;
     }
     addEventListener(type, fn) {
         (this._listeners[type] ??= []).push(fn);
@@ -159,6 +167,37 @@ test("winning the match to 5 points is announced and locks further play", () => 
     assert.equal(g.result(), "You win! Congratulations.");
     g.click("paper"); // game over: clicks must be ignored
     assert.equal(g.score(), "You: 5, Computer: 0");
+    assert.equal(g.result(), "You win! Congratulations.");
+});
+
+test("each round writes result-out exactly once (single live-region message, #7)", () => {
+    // win round
+    let g = loadGame(0.99); // computer: scissors
+    let resultEl = g.byId.get("result-out");
+    assert.equal(resultEl._textWrites, 0);
+    g.click("rock");
+    assert.equal(resultEl._textWrites, 1, "win round: result-out must be written exactly once");
+    assert.equal(g.result(), "You win! Rock beats scissors.");
+    // tie round
+    g = loadGame(0); // computer: rock
+    resultEl = g.byId.get("result-out");
+    g.click("rock");
+    assert.equal(resultEl._textWrites, 1, "tie round: result-out must be written exactly once");
+    assert.equal(g.result(), "You tied! You both had rock.");
+    // loss round
+    g = loadGame(0);
+    resultEl = g.byId.get("result-out");
+    g.click("scissors");
+    assert.equal(resultEl._textWrites, 1, "loss round: result-out must be written exactly once");
+    assert.equal(g.result(), "You lost! Rock beats scissors.");
+});
+
+test("match-over message is the single write on the deciding round (#7)", () => {
+    const g = loadGame(0); // computer always rock → paper wins every round
+    const resultEl = g.byId.get("result-out");
+    for (let i = 0; i < 5; i++) g.click("paper");
+    // 5 rounds → exactly 5 writes; the 5th is the match-over message
+    assert.equal(resultEl._textWrites, 5, "each of the 5 rounds writes result-out exactly once");
     assert.equal(g.result(), "You win! Congratulations.");
 });
 
