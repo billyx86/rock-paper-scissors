@@ -11,8 +11,16 @@ const html = readFileSync(path.join(here, "..", "index.html"), "utf8");
 class FakeElement {
     constructor(id) {
         this.id = id;
-        this.textContent = "";
+        this._textContent = "";
+        this._textWrites = 0;
         this._listeners = {};
+    }
+    get textContent() {
+        return this._textContent;
+    }
+    set textContent(value) {
+        this._textContent = String(value);
+        this._textWrites++;
     }
     addEventListener(type, fn) {
         (this._listeners[type] ??= []).push(fn);
@@ -38,7 +46,13 @@ function buildDom() {
     for (const required of ["rock", "paper", "scissors", "reset", "score", "result-out"]) {
         assert.ok(byId.has(required), `index.html is missing id="${required}"`);
     }
-    const documentStub = { getElementById: (id) => byId.get(id) ?? null };
+    const documentStub = {
+        getElementById: (id) => byId.get(id) ?? null,
+        _listeners: {},
+        addEventListener(type, fn) {
+            (this._listeners[type] ??= []).push(fn);
+        },
+    };
     return { documentStub, byId };
 }
 
@@ -54,9 +68,15 @@ function loadGame(random = 0) {
     fn(documentStub, patchedMath);
     return {
         byId,
+        documentStub,
         score: () => byId.get("score").textContent,
         result: () => byId.get("result-out").textContent,
         click: (id) => byId.get(id)?.click(),
+        // Simulate a physical keypress on the page.
+        press: (key, modifiers = {}) => {
+            const event = { key, ctrlKey: false, metaKey: false, altKey: false, ...modifiers };
+            for (const fn of documentStub._listeners["keydown"] ?? []) fn(event);
+        },
     };
 }
 
@@ -96,6 +116,50 @@ test("same choice ties and neither scores", () => {
     assert.equal(g.result(), "You tied! You both had rock.");
 });
 
+test("keyboard: R/P/S throw, Backspace resets (#6)", () => {
+    const g = loadGame(0); // computer always draws rock
+    g.press("r"); // tie
+    assert.equal(g.score(), "You: 0, Computer: 0");
+    g.press("P"); // case-insensitive: paper beats rock
+    assert.equal(g.score(), "You: 1, Computer: 0");
+    g.press("s"); // scissors loses to rock
+    assert.equal(g.score(), "You: 1, Computer: 1");
+    g.press("Backspace");
+    assert.equal(g.score(), "");
+    assert.equal(g.result(), "");
+    g.press("p"); // playable again after keyboard reset
+    assert.equal(g.score(), "You: 1, Computer: 0");
+});
+
+test("keyboard: unhandled and modifier-combo keys are ignored (#6)", () => {
+    const g = loadGame(0);
+    g.press("a");
+    g.press("Enter");
+    g.press("r", { ctrlKey: true }); // browser shortcut, not a throw
+    g.press("r", { metaKey: true });
+    g.press("r", { altKey: true });
+    assert.equal(g.score(), "");
+    assert.equal(g.result(), "");
+});
+
+test("keyboard: throws respect the game-over lock (#6)", () => {
+    const g = loadGame(0); // computer always rock → paper wins every round
+    for (let i = 0; i < 5; i++) g.press("p");
+    assert.equal(g.score(), "You: 5, Computer: 0");
+    g.press("p"); // game over: keys must be ignored
+    assert.equal(g.score(), "You: 5, Computer: 0");
+    assert.equal(g.result(), "You win! Congratulations.");
+});
+
+test("buttons have a visible focus style (keyboard playability)", () => {
+    const css = readFileSync(path.join(here, "..", "style.css"), "utf8");
+    assert.match(
+        css,
+        /:focus(?!-visible)\s*\{[^}]*outline[^;]*:?\s*\S/i,
+        "no ':focus { outline: ... }' rule — keyboard users get no visible focus indicator"
+    );
+});
+
 test("winning the match to 5 points is announced and locks further play", () => {
     const g = loadGame(0); // computer always draws rock → player's paper wins every round
     for (let i = 0; i < 5; i++) g.click("paper");
@@ -103,6 +167,37 @@ test("winning the match to 5 points is announced and locks further play", () => 
     assert.equal(g.result(), "You win! Congratulations.");
     g.click("paper"); // game over: clicks must be ignored
     assert.equal(g.score(), "You: 5, Computer: 0");
+    assert.equal(g.result(), "You win! Congratulations.");
+});
+
+test("each round writes result-out exactly once (single live-region message, #7)", () => {
+    // win round
+    let g = loadGame(0.99); // computer: scissors
+    let resultEl = g.byId.get("result-out");
+    assert.equal(resultEl._textWrites, 0);
+    g.click("rock");
+    assert.equal(resultEl._textWrites, 1, "win round: result-out must be written exactly once");
+    assert.equal(g.result(), "You win! Rock beats scissors.");
+    // tie round
+    g = loadGame(0); // computer: rock
+    resultEl = g.byId.get("result-out");
+    g.click("rock");
+    assert.equal(resultEl._textWrites, 1, "tie round: result-out must be written exactly once");
+    assert.equal(g.result(), "You tied! You both had rock.");
+    // loss round
+    g = loadGame(0);
+    resultEl = g.byId.get("result-out");
+    g.click("scissors");
+    assert.equal(resultEl._textWrites, 1, "loss round: result-out must be written exactly once");
+    assert.equal(g.result(), "You lost! Rock beats scissors.");
+});
+
+test("match-over message is the single write on the deciding round (#7)", () => {
+    const g = loadGame(0); // computer always rock → paper wins every round
+    const resultEl = g.byId.get("result-out");
+    for (let i = 0; i < 5; i++) g.click("paper");
+    // 5 rounds → exactly 5 writes; the 5th is the match-over message
+    assert.equal(resultEl._textWrites, 5, "each of the 5 rounds writes result-out exactly once");
     assert.equal(g.result(), "You win! Congratulations.");
 });
 

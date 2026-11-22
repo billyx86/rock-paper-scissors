@@ -26,6 +26,13 @@
     text-decoration: underline;
 }
 
+/* Keyboard playability (#6): the browser default focus ring is invisible
+   on the black background, so give the buttons a visible focus outline. */
+.option-button:focus {
+    outline: 3px solid #00ff00;
+    outline-offset: 2px;
+}
+
 body {
     background-color: black;
     color: lime;

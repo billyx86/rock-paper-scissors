@@ -32,6 +32,23 @@ test("no duplicate ids", () => {
     assert.deepEqual(dupes, [], `duplicate ids: ${dupes.join(", ")}`);
 });
 
+test("no stray text characters render around the game buttons", () => {
+    const start = html.indexOf('<div class="buttons">');
+    assert.ok(start !== -1, 'buttons container (class="buttons") not found');
+    const end = html.indexOf('id="score"', start);
+    assert.ok(end !== -1, 'score div not found after the buttons block');
+    const block = html.slice(start, end);
+    // Strip the tags; what's left is the text a visitor actually sees.
+    const visibleText = block.replace(/<[^>]+>/g, "");
+    assert.ok(
+        !visibleText.includes(">"),
+        `stray ">" text visible next to the buttons (markdown artifact?): ${JSON.stringify(visibleText)}`
+    );
+    for (const label of ["Rock", "Paper", "Scissors", "Reset"]) {
+        assert.ok(visibleText.includes(label), `button label "${label}" missing from the buttons block`);
+    }
+});
+
 test("style.css url() references point at existing local files", () => {
     const css = readFileSync(path.join(root, "style.css"), "utf8");
     const refs = [...css.matchAll(/url\(([^)]+)\)/g)].map((m) =>

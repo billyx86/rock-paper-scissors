@@ -30,6 +30,24 @@ resetButton.addEventListener('click', function () {
     computerScore = 0;
 });
 
+// Keyboard controls: R/P/S throw, Backspace resets (#6). The key is
+// routed through the real button's click handler so the game-over lock
+// and all round logic apply exactly as they do for mouse clicks.
+const keyMap = {
+    "r": "rock",
+    "p": "paper",
+    "s": "scissors",
+    "backspace": "reset",
+};
+
+document.addEventListener("keydown", function (event) {
+    // Ignore modifier combos (browser shortcuts, find-in-page, etc.)
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const id = keyMap[event.key.toLowerCase()];
+    const button = id ? document.getElementById(id) : null;
+    if (button) button.click();
+});
+
 // main code
 
 function capitaliseFirstLetter(string) {
@@ -43,31 +61,42 @@ function getComputerChoice() {
 
 function outputResult(win, playerSelection, computerSelection) {
     if(win == true) {
-        resultOut.textContent = `You win! ${capitaliseFirstLetter(playerSelection)} beats ${computerSelection}.`;
+        return `You win! ${capitaliseFirstLetter(playerSelection)} beats ${computerSelection}.`;
     } else {
-        resultOut.textContent = `You lost! ${capitaliseFirstLetter(computerSelection)} beats ${playerSelection}.`;
+        return `You lost! ${capitaliseFirstLetter(computerSelection)} beats ${playerSelection}.`;
     }
 }
 
+// Returns the round's outcome text without touching the DOM (#7): the
+// caller writes result-out exactly once per round so the aria-live
+// region announces one message per round, never two.
 function playRound(playerSelection, computerSelection) {
     playerSelection = playerSelection.toLowerCase();
     if(playerSelection === computerSelection) {
-        resultOut.textContent = `You tied! You both had ${playerSelection}.`;
+        return `You tied! You both had ${playerSelection}.`;
     } else if((playerSelection == "rock" && computerSelection == "scissors") || (playerSelection == "scissors" && computerSelection == "rock")) {
-        playerSelection == "rock" ? (playerScore++, outputResult(1, playerSelection, computerSelection)) : (computerScore++, outputResult(0, playerSelection, computerSelection));
+        if (playerSelection == "rock") { playerScore++; } else { computerScore++; }
+        return outputResult(playerSelection == "rock", playerSelection, computerSelection);
     } else if((playerSelection == "scissors" && computerSelection == "paper") || (playerSelection == "paper" && computerSelection == "scissors")) {
-        playerSelection == "scissors" ? (playerScore++, outputResult(1, playerSelection, computerSelection)) : (computerScore++, outputResult(0, playerSelection, computerSelection));
-    }  else if((playerSelection == "paper" && computerSelection == "rock") || (playerSelection == "rock" && computerSelection == "paper")) {
-        playerSelection == "paper" ? (playerScore++, outputResult(1, playerSelection, computerSelection)): (computerScore++, outputResult(0, playerSelection, computerSelection));
+        if (playerSelection == "scissors") { playerScore++; } else { computerScore++; }
+        return outputResult(playerSelection == "scissors", playerSelection, computerSelection);
+    } else {
+        if (playerSelection == "paper") { playerScore++; } else { computerScore++; }
+        return outputResult(playerSelection == "paper", playerSelection, computerSelection);
     }
 }
 
 function game(playerSelection) {
-    playRound(playerSelection, getComputerChoice());
+    const roundMessage = playRound(playerSelection, getComputerChoice());
     scoreDiv.textContent = `You: ${playerScore}, Computer: ${computerScore}`;
-    if(playerScore == 5)  {
-        resultOut.textContent = "You win! Congratulations."
+    // Single, last write to result-out each round (#7): the match-over
+    // message wins over the round result so screen readers announce
+    // exactly one message.
+    let finalMessage = roundMessage;
+    if(playerScore == 5) {
+        finalMessage = "You win! Congratulations.";
     } else if(computerScore == 5) {
-        resultOut.textContent = "The computer wins!"
+        finalMessage = "The computer wins!";
     }
+    resultOut.textContent = finalMessage;
 }
