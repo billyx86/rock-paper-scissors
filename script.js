@@ -30,6 +30,24 @@ resetButton.addEventListener('click', function () {
     computerScore = 0;
 });
 
+// Keyboard controls: R/P/S throw, Backspace resets (#6). The key is
+// routed through the real button's click handler so the game-over lock
+// and all round logic apply exactly as they do for mouse clicks.
+const keyMap = {
+    "r": "rock",
+    "p": "paper",
+    "s": "scissors",
+    "backspace": "reset",
+};
+
+document.addEventListener("keydown", function (event) {
+    // Ignore modifier combos (browser shortcuts, find-in-page, etc.)
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const id = keyMap[event.key.toLowerCase()];
+    const button = id ? document.getElementById(id) : null;
+    if (button) button.click();
+});
+
 // main code
 
 function capitaliseFirstLetter(string) {
