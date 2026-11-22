@@ -1,0 +1,12 @@
+# Dependencies (none today, but the package.json scripts invite them)
+node_modules/
+
+# Test artefacts
+*.log
+coverage/
+
+# Editor / OS noise
+.DS_Store
+*.swp
+.idea/
+.vscode/
